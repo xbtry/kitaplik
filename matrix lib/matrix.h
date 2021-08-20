@@ -1,12 +1,15 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 #include <iostream>
+#include "matk.h"
+
 enum RCodes
         {
             SUCCESS = 0,
             ERR_EXCESS_SIZE_ARRAY = -1,
             ERR_EXCESS_SIZE_PUTELEM = -2,
             ERR_EXCESS_SIZE_GETELEM = -3,
+            ERR_NOT_SQUARE_MATRIX = -4,
         };
 
 template <class T>
@@ -38,13 +41,16 @@ class Matrix
         //Operatör aşırı-yükleme
         //Operator Overloading
         
-        Matrix<T> operator * (const Matrix &matf) const;
+        Matrix<T> operator *(const Matrix &matf) const;
 
         //========================================================================//
         //Diğer Fonksiyonlar
         //Other funcs
         void printMat();
         void zeroMat();
+        float det();
+        int checkMaxZero(const Matrix &matf) const;
+        float extractRC(int row, int column);
 };
 
 //Sade kurma fonksiyonu
@@ -84,7 +90,7 @@ Matrix<T> Matrix<T>::operator*(const Matrix<T> &matf) const{
             }
         }
     }
-    newmatrix.printMat();
+    ///newmatrix.printMat();
     return newmatrix;
 }
 
@@ -171,6 +177,142 @@ void Matrix<T>::printMat()
         
     }
     std::cout << "========================================\n";
+}
+
+template <class T>
+int Matrix<T>::checkMaxZero(const Matrix<T> &matf) const
+{
+    unsigned int zero_num = 0;
+    unsigned int old_zero_num_column = 0;
+    unsigned int old_zero_num_row = 0;
+    unsigned int chosen_row = 0;
+    unsigned int chosen_column = 0;
+    
+    for(int i = 1; i < matf.row+1; i++)
+    {
+        for(int j = 1; j < matf.column+1; j++)
+        {
+            if(matf.getElem(j,i) == 0)
+            {
+                zero_num++;
+            }
+            if(zero_num > 0 && j == matf.column)
+            {
+                if(old_zero_num_column < zero_num)
+                {
+                    chosen_column = j;
+                    old_zero_num_column = zero_num;
+                    zero_num = 0;
+                }
+            }
+        }
+    }
+
+    zero_num = 0;
+
+    for(int i = 1; i < matf.row+1; i++)
+    {
+        for(int j = 1; j < matf.column+1; j++)
+        {
+            if(matf.getElem(i,j) == 0)
+            {
+                zero_num++;
+            }
+            if(zero_num > 0 && j == matf.column)
+            {
+                if(old_zero_num_row < zero_num)
+                {
+                    chosen_row = j;
+                    old_zero_num_row = zero_num;
+                    zero_num = 0;
+                }
+            }
+        }
+    }
+
+    if(chosen_row > chosen_column)
+    {
+        return chosen_row*113;
+    }
+    else
+    {
+        return chosen_column*127;
+    }
+
+}
+
+template <class T>
+float Matrix<T>::extractRC(int row, int column)
+{
+    int mat_size = getRoot((row*column)-((2*row)-1));;
+    T array_extracted[mat_size*mat_size];
+    int it = 0;
+    for(int i = 1; i < this->row; i++)
+    {
+        for(int j = 1; j < this->column; j++)
+        {
+            if(i != row && j != column)
+            {
+                array_extracted[it] = getElem(i,j);
+                it++;
+                if(it > (mat_size*mat_size)-1)
+                    return ERR_EXCESS_SIZE_ARRAY;
+            }
+        }
+    }
+    Matrix<T> newm(mat_size,mat_size,array_extracted);
+    float cof = usAl(-1,row+column) * newm.det();
+    return cof;
+}
+
+template <class T>
+float Matrix<T>::det()
+{
+    
+    float det = 0;
+
+    if(row==column)
+    {
+        if(row == 1)
+            return getElem(1,1);
+
+        if(row == 2)
+        {
+            float result = (getElem(1,1) * getElem(2,2)) - (getElem(1,2)*getElem(2,1));
+            return result;
+        }
+
+        if(row == 3)
+        {
+            float result = (getElem(1,1)*((getElem(2,2)*getElem(3,3))-(getElem(2,3)*getElem(3,2)))) - (getElem(1,2)*((getElem(2,1)*getElem(3,3))-(getElem(2,3)*getElem(3,1)))) + (getElem(1,3)*((getElem(2,1)*getElem(3,2))-(getElem(2,2)*getElem(3,1))));
+            return result;
+        }
+
+        int val = checkMaxZero(*this);
+        if(val % 113 == 0)
+        {
+            int row_num = val/113;
+            
+            for(int i = 1; i < column+1; i++)
+            {
+                det += getElem(row_num,i) * extractRC(row_num,i);
+                return det;
+            }
+        }
+        else
+        {
+            int col_num = val/127;
+            for(int i = 1; i < row+1; i++)
+            {
+                det += getElem(col_num,i) * extractRC(col_num,i);
+                return det;
+            }
+        }
+        
+    }
+    else{
+        return ERR_NOT_SQUARE_MATRIX;
+    }
 }
 
 #endif
