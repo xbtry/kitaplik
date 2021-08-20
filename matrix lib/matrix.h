@@ -48,8 +48,10 @@ class Matrix
         //Other funcs
         void printMat();
         void zeroMat();
+        void rowSwap(int rowOne,int rowTwo);
+        void rowMultipx(int rowNum, T number);
+        void rowAdd(int rowOne,int rowTwo);
         float det();
-        int checkMaxZero(const Matrix &matf) const;
         float extractRC(int row, int column);
 };
 
@@ -146,6 +148,31 @@ int Matrix<T>::putArray(T* array){
     return 0;
 }
 
+template <class T>
+void Matrix<T>::rowSwap(int rowOne,int rowTwo)
+{
+    T rownums[column];
+    for(int i = 1; i < column+1; i++)
+        rownums[i-1] = getElem(rowTwo,i);
+    for(int i = 1; i < column+1; i++)
+        putElem(rowTwo,i,getElem(rowOne,i));
+    for(int i = 1; i < column+1; i++)
+        putElem(rowOne,i,rownums[i-1]);
+}
+
+template <class T>
+void Matrix<T>::rowMultipx(int rowNum, T number)
+{
+    for(int i = 1; i < column+1; i++)
+        putElem(rowNum,i,getElem(rowNum,i)*number);
+}
+
+template <class T>
+void Matrix<T>::rowAdd(int rowOne,int rowTwo)
+{
+    for(int i = 1; i < column+1; i++)
+        putElem(rowTwo,i,getElem(rowOne,i)+getElem(rowTwo,i));
+}
 //0 matrisi oluşturur.
 //Fill the matrix with 0's.
 template <class T>
@@ -173,73 +200,15 @@ void Matrix<T>::printMat()
     {
         int rowN = (int)(i/column)+1;
         int columnN = (i%column)+1;
-        std::cout << "MATRIX [" << rowN << "] [" << columnN << "] = " << getElem(rowN,columnN)<< '\n';
-        
+        std::cout << "[" << rowN << "][" << columnN << "] = " << getElem(rowN,columnN) << ' ' << " || ";
+        if(columnN == column)
+            std::cout << '\n';
+        std::cout.flush();
     }
     std::cout << "========================================\n";
+    std::cout.flush();
 }
 
-template <class T>
-int Matrix<T>::checkMaxZero(const Matrix<T> &matf) const
-{
-    unsigned int zero_num = 0;
-    unsigned int old_zero_num_column = 0;
-    unsigned int old_zero_num_row = 0;
-    unsigned int chosen_row = 0;
-    unsigned int chosen_column = 0;
-    
-    for(int i = 1; i < matf.row+1; i++)
-    {
-        for(int j = 1; j < matf.column+1; j++)
-        {
-            if(matf.getElem(j,i) == 0)
-            {
-                zero_num++;
-            }
-            if(zero_num > 0 && j == matf.column)
-            {
-                if(old_zero_num_column < zero_num)
-                {
-                    chosen_column = j;
-                    old_zero_num_column = zero_num;
-                    zero_num = 0;
-                }
-            }
-        }
-    }
-
-    zero_num = 0;
-
-    for(int i = 1; i < matf.row+1; i++)
-    {
-        for(int j = 1; j < matf.column+1; j++)
-        {
-            if(matf.getElem(i,j) == 0)
-            {
-                zero_num++;
-            }
-            if(zero_num > 0 && j == matf.column)
-            {
-                if(old_zero_num_row < zero_num)
-                {
-                    chosen_row = j;
-                    old_zero_num_row = zero_num;
-                    zero_num = 0;
-                }
-            }
-        }
-    }
-
-    if(chosen_row > chosen_column)
-    {
-        return chosen_row*113;
-    }
-    else
-    {
-        return chosen_column*127;
-    }
-
-}
 
 template <class T>
 float Matrix<T>::extractRC(int row, int column)
@@ -288,26 +257,12 @@ float Matrix<T>::det()
             return result;
         }
 
-        int val = checkMaxZero(*this);
-        if(val % 113 == 0)
-        {
-            int row_num = val/113;
-            
+        else{
             for(int i = 1; i < column+1; i++)
-            {
-                det += getElem(row_num,i) * extractRC(row_num,i);
-                return det;
-            }
+                det += getElem(1,i) * extractRC(1,i);
+            return det;
         }
-        else
-        {
-            int col_num = val/127;
-            for(int i = 1; i < row+1; i++)
-            {
-                det += getElem(col_num,i) * extractRC(col_num,i);
-                return det;
-            }
-        }
+
         
     }
     else{
